@@ -4,21 +4,24 @@ import warnings
 
 ROO_DIR = '/Users/robert/Documents/code/AliyunSVideo-product_v3.6.5'
 
+KEY_WORD = 'COMMIT_ID'
 VERSION_FILE_NAME = 'version.h'
+LOG_FILE = 'log.txt'
+
 dir_list = \
     {
         'alivc_framework': 'sources/native/modules/alivc_framework',
         # 'src': 'sources/native/src',
         # 'android': 'sources/android'
     }
-key_word = 'COMMIT_ID'
+
 
 output_list = {}
 
 def write_version_file():
     print 'will be add in the furture...'
 
-def add_commit_to_file():
+def add_commit_to_file(commit_id):
     b_update_commit_id = False
     if not os.path.exists(VERSION_FILE_NAME):
         write_version_file()
@@ -30,14 +33,15 @@ def add_commit_to_file():
     except:
         raise IOError("line {} is not exit !".format(VERSION_FILE_NAME))
 
-    for i, value in enumerate(file_content_list):
-        print 'i = {}, value = {}'.format(i, value)
-        if key_word in value:
-            index = value.find(key_word)
-            file_content_list[i] = value.replace(value[index+len(key_word):],' 123')
+    for i, line in enumerate(file_content_list):
+        print 'i = {}, line = {}'.format(i, line)
+        if KEY_WORD in line:
+            index = line.find(KEY_WORD)
+            file_content_list[i] = line.replace(line[index+len(KEY_WORD):], '   ' + commit_id)
             b_update_commit_id = True
+            break
 
-    if b_update_commit_id == False
+    if b_update_commit_id == False:
         warnings.warn("{} is not be update.".format(VERSION_FILE_NAME))
 
     output_file = open(VERSION_FILE_NAME, 'w')
@@ -45,20 +49,43 @@ def add_commit_to_file():
     output_file.close()
 
 
-
-
 def get_commit():
+    print 'cqd, pwd = {}'.format(os.getcwd())
+    cmd = 'git log -n 1 > ' + LOG_FILE
+    os.system(cmd)
+
+    commit_id_find = ''
+
+    try:
+        file_log = open(LOG_FILE, 'r')
+        file_log_contents_list = file_log.readlines()
+        file_log.close()
+    except:
+        raise IOError("line {} open failed !".format(LOG_FILE))
+
+    for i, line in enumerate(file_log_contents_list):
+        if 'commit' in line:
+            commit_id_find = line.split(' ')[-1]
+            break
+
+    if commit_id_find == '':
+        raise TypeError("commit id is found")
+    else:
+        return commit_id_find.strip()
+
+def generate_version_file():
     for key, dir in dir_list.items():
         sub_dir = ROO_DIR + '/' + dir
         os.chdir(sub_dir)
-        os.system('git log -n 1 > log.txt')
-        add_commit_to_file()
+
+        commit_id = get_commit()
+        add_commit_to_file(commit_id)
 
 
 def test():
     print "CQD, dir = {}".format(ROO_DIR)
     os.chdir(ROO_DIR)
-    get_commit()
+    generate_version_file()
 
 
 if __name__ == '__main__':
