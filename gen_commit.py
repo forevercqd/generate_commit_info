@@ -5,26 +5,40 @@ import warnings
 ROO_DIR = '/Users/robert/Documents/code/AliyunSVideo-product_v3.6.5'
 
 KEY_WORD = 'COMMIT_ID'
+VERSION_TEMPLATE = '_VERSION_H'
+
 VERSION_FILE_NAME = 'version.h'
 LOG_FILE = 'log.txt'
 
 dir_list = \
     {
-        'alivc_framework': 'sources/native/modules/alivc_framework',
-        # 'src': 'sources/native/src',
+   #     'alivc_framework': 'sources/native/modules/alivc_framework',
+        'src': 'sources/native/src',
         # 'android': 'sources/android'
     }
+
+version_file_template = [
+    '#ifndef XXXXX_VERSION_H\n',
+    '#define XXXXX_VERSION_H\n',
+    '\n',
+    '#define COMMIT_ID   XXXXX\n',
+    '\n',
+    '#endif\n'
+]
 
 
 output_list = {}
 
-def write_version_file():
-    print 'will be add in the furture...'
+def write_version_file(file_name):
+    file_temp = open(file_name, 'w')
+    file_temp_content = file_temp.writelines(version_file_template)
+    file_temp.close()
+
 
 def add_commit_to_file(commit_id):
     b_update_commit_id = False
     if not os.path.exists(VERSION_FILE_NAME):
-        write_version_file()
+        write_version_file(VERSION_FILE_NAME)
 
     try:
         input_file = open(VERSION_FILE_NAME, 'r')
@@ -35,11 +49,14 @@ def add_commit_to_file(commit_id):
 
     for i, line in enumerate(file_content_list):
         print 'i = {}, line = {}'.format(i, line)
+        if "_VERSION_H" in line:
+            index = line.find()
+            print 'CQD, find version : {}'.format(line[index+len(KEY_WORD):])
         if KEY_WORD in line:
             index = line.find(KEY_WORD)
             file_content_list[i] = line.replace(line[index+len(KEY_WORD):], '   ' + commit_id)
             b_update_commit_id = True
-            break
+
 
     if b_update_commit_id == False:
         warnings.warn("{} is not be update.".format(VERSION_FILE_NAME))
